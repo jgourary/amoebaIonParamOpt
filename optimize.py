@@ -4,7 +4,12 @@ import subprocess
 import numpy as np
 from scipy.optimize import least_squares
 from subMM import *
+from dynamic import *
 
+totalHFE = 0.0
+trajFolder = ""
+xyzPath = ""
+keyPath = ""
 
 def costFUNC(params):
     QM = np.loadtxt('QM-energy.dat', usecols=(-1,), unpack=True)
@@ -13,15 +18,24 @@ def costFUNC(params):
     my_file = open("filelist", "r")
     filenames = my_file.readlines()
     print("filelist length = " + str(len(filenames)))
-    cost = 0
+    curveCost = 0
     i = 0
     while i < len(filenames):
         weight = costWeight(filenames[i])
         print(filenames[i] + ": " + str(weight))
-        cost += ((QM[i] - MM[i]) ** 2) * weight
+        curveCost += ((QM[i] - MM[i]) ** 2) * weight
         i += 1
-    print("Cost = " + str(cost))
-    return cost
+    print("Cost from ion-ligand curve = " + str(curveCost))
+
+    stageHFE = getFreeEnergy(trajFolder, xyzPath, keyPath, lastFE)
+    global totalHFE
+    totalHFE += stageHFE
+    HFECost = totalHFE - targetHFE
+    print("Cost from HFE = " + str(totalHFE))
+
+    totalCost = 0.25 * curveCost + 0.75 * HFECost
+
+    return totalCost
 
 
 def costWeight(filename):
