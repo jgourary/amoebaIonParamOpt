@@ -1,7 +1,5 @@
 # program for multi-variable optimization
 
-import subprocess
-import numpy as np
 from scipy.optimize import least_squares
 from subMM import *
 
